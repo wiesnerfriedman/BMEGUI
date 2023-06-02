@@ -25,7 +25,7 @@ headers = {'X','Y', 'BME mean', 'BME variance'};
 cellfun(@(x) fprintf(fid,'%s,',x),headers);
 fprintf(fid,'\n');
 %fclose(fid);
-dlmwrite(saveName,[X(1:end-1)',Y(1:end-1)',BMEmean(1:end-1)', BMEvar(1:end-1)'],'-append','delimiter',',','precision','%12.10g');
+dlmwrite(saveName,[X(1:end-1)',Y(1:end-1)',BMEmean(1:end-1)', BMEvar(1:end-1)'],'-append','delimiter',',');
 fclose(fid);
 % (1:end-1)'   : Because files from BMEGUI Python script have ',' at last
 % line because scipt [myfile.write(str(item)+',')] put coma after writing

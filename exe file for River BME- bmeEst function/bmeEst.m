@@ -10,13 +10,6 @@ function bmeEst(dataFile,paramFile,smeanFile,tmeanFile,outFile1,outFile2,outFile
 %        Output file1
 %        Output file2
 % Output: Outputfile
-disp(dataFile)
-disp(paramFile)
-disp(smeanFile)
-disp(tmeanFile)
-disp(outFile1)
-disp(outFile2)
-disp(outFile3)
 
 try
     % Get data points and values
@@ -132,6 +125,7 @@ try
     %-----------------End: Copied from Original codes------------        
     end
     
+        
 
     % Create coordinate matrix
     rawCoord = [rawX,rawY,rawT];
@@ -195,7 +189,9 @@ try
         rstd = rawVal2(rawType == 2,:);
         rvar = rstd.^2;
         zvar = log(1.+(rvar./rmean.^2));
-        zmean = log(rmean)-(zvar)/2;
+        zmean = log(rmean)-(zvar.^2)/2;  %original
+        zmean = log(rmean)-(zvar/2);     % P Jat 01/2015
+        
     else
         zmean = rawVal1(rawType == 2,:);
         zstd = rawVal2(rawType == 2,:);
@@ -208,7 +204,7 @@ try
     % Create soft data (Gaussian)
     [stype2,nl2,limi2,probdens2]=probaGaussian(zmean,zvar);
 
-%----------------------soft type ==3 (P Jat)--------------------------
+     %----------------------soft type ==3 (P Jat)--------------------------
         % Set soft data values (Triangular)
 %     if flgLog
 %         rmean = rawVal1(rawType == 3,:);
@@ -278,7 +274,7 @@ try
         [stype,nl,limi,probdens]=probacat(stype1,nl1,limi1,probdens1,...
                                       stype2,nl2,limi2,probdens2);
     end
-disp('OK 111111')%###############################################
+
 %     %---------------- For extended soft data type : P Jat -----------------
 %        %Concatenate soft data
 %     if (size(cs1,1) == 0) & (size(cs2,1) == 0) & (size(cs3,1) == 0) & (size(cs4,1) == 0)
@@ -330,14 +326,11 @@ disp('OK 111111')%###############################################
 	gaussianC([1 2],[1 2]);
 	sphericalC([1 2],[1 2]);
 	holesinC([1 2],[1 2]);
-	holecosC([1 2],[1 2]);  
-    disp('OK 222222')%###############################################
-    save beforeCombineDupli
+	holecosC([1 2],[1 2]);   
     % Combine duplicated data
     [chC,zhC,csC,stypeC,nlC,limiC,probdensC] = combinedupli(ch,zh,'ave',cs,stype,nl,limi,probdens);
 	% Calculate BME moments
      existID2 = exist('stdPathRT.txt', 'file');
-     disp('OK 10')
      if (existID2==2)
           pTolerance=0.01;
           load riverReaches;  % saved by 'calcCov(): Line 71
@@ -348,19 +341,16 @@ disp('OK 111111')%###############################################
           [c1rawR,c2rawR]=cartesian2riverProj(riverReaches,chC,pTolerance);
           chC =c1rawR;
           
-          disp('OK 3333333')%###############################################
           dist = {'coord2distRiver' [riverTopology]};
           % Combine duplicated data
           [chC,zhC,csC,stypeC,nlC,limiC,probdensC] = combinedupli(chC,zhC,'ave',csC,stypeC,nlC,limiC,probdensC);  
           [moments,info]=BMEprobaMomentsRiver(sk,chC,csC,zhC,stypeC,nlC,...
               limiC,probdensC,covmodel,covparam,nhmax,nsmax,dmax,order,dist);           
      else
-          disp('OK 11')
           [moments,info]=BMEprobaMomentsRiver(sk,chC,csC,zhC,stypeC,nlC,...
               limiC,probdensC,covmodel,covparam,nhmax,nsmax,dmax,order); % only 14 input arguments
-           disp('OK 12')
      end
-disp('OK 4444444')%###############################################
+
     % Output the result
     estMean = moments(:,1);
     estVar = moments(:,2);
@@ -398,30 +388,24 @@ disp('OK 4444444')%###############################################
 % % %     smMean = griddata(sk(:,1),sk(:,2),estMean,smX(:),smY(:),'linear',{'QJ'});    
 % % %     smVar = griddata(sk(:,1),sk(:,2),estVar,smX(:),smY(:),'linear',{'QJ'});
 % % %======================================================================
-
-disp('OK 666666')%###############################################
     if (existID2==2)
-        %smXX = [min(sk(:,1)):(max(sk(:,1))-min(sk(:,1)))/(numDispX-1):max(sk(:,1))]';
-        %smYY = [min(sk(:,2)):(max(sk(:,2))-min(sk(:,2)))/(numDispY-1):max(sk(:,2))]';
-        %XYGridMean  = getXYGridData(smXX, smYY, sk,estMean,estMean);
-        %XYGridVar    = getXYGridData(smXX, smYY, sk,estVar,estVar);
-        %smX         = XYGridMean(:,1);
-        %smY         = XYGridMean(:,2);
-        %smMean      = XYGridMean(:,3);
-        %smVar       = XYGridVar(:,3);    
-        smX         = sk(:,1);
-        smY         = sk(:,2);
-        smMean      = estMean;
-        smVar       = estVar; 
+        smXX = [min(sk(:,1)):(max(sk(:,1))-min(sk(:,1)))/(numDispX-1):max(sk(:,1))]';
+        smYY = [min(sk(:,2)):(max(sk(:,2))-min(sk(:,2)))/(numDispY-1):max(sk(:,2))]';
+        XYGridMean  = getXYGridData(smXX, smYY, sk,estMean,estMean);
+        XYGridVar    = getXYGridData(smXX, smYY, sk,estVar,estVar);
+        smX         = XYGridMean(:,1);
+        smY         = XYGridMean(:,2);
+        smMean      = XYGridMean(:,3);
+        smVar       = XYGridVar(:,3);    
         
     else
         % Create smoothing point
         [smX,smY] = meshgrid(min(sk(:,1)):(max(sk(:,1))-min(sk(:,1)))/(numDispX-1):max(sk(:,1)),...
                          min(sk(:,2)):(max(sk(:,2))-min(sk(:,2)))/(numDispY-1):max(sk(:,2)));
-        smMean = griddata(sk(:,1),sk(:,2),estMean,smX(:),smY(:));    
-        smVar = griddata(sk(:,1),sk(:,2),estVar,smX(:),smY(:));
+        smMean = griddata(sk(:,1),sk(:,2),estMean,smX(:),smY(:),'linear',{'QJ'});    
+        smVar = griddata(sk(:,1),sk(:,2),estVar,smX(:),smY(:),'linear',{'QJ'});
     end        
-    disp('OK 777777')%###############################################           
+               
     dlmwrite(outFile2, [smX(:),smY(:),smMean,smVar],'delimiter',',','precision','%12.10g');
     disp('BME estimation done!');
 catch
