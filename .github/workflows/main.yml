@@ -1,0 +1,40 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      run: |
+        choco install python2 --version 2.5.0
+        python -m pip install --upgrade pip
+
+    - name: Install dependencies
+      run: |
+        pip install numpy==1.0.3
+        pip install scipy==0.5.2
+        pip install matplotlib==0.90.0
+        pip install pywin32==214
+        # Add commands to install other dependencies here
+
+    - name: Run tests
+      run: |
+        python -m unittest discover -s tests
+
+    - name: Build application
+      run: |
+        # Add commands to build your application here
+
+    - name: Package application
+      run: |
+        # Add commands to package your application here
+
+    - name: Deploy application
+      run: |
+        # Add commands to deploy your application here
